@@ -1,0 +1,92 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>زر الإضاءة الجماعي</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #222;
+            transition: background-color 0.3s;
+        }
+        button {
+            width: 80px;
+            height: 80px;
+            font-size: 20px;
+            border: none;
+            background-color: red;
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:active {
+            background-color: darkred;
+        }
+    </style>
+</head>
+<body>
+
+    <button onclick="toggleLight()">اضغط</button>
+
+    <script>
+        const url = "https://api.jsonbin.io/v3/b/67df748a8a456b79667aded0";
+        
+        // دالة لقراءة حالة الزر من JSONBin
+        async function checkLockStatus() {
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Master-Key": "$2a$10$4UPC1E1p.uUVrcZGToTE7uWrjGdGByxuiDZvzoxvCH475dz38UAjq" 
+                }
+            });
+            const data = await response.json();
+            return data.record.locked;
+        }
+
+        // دالة لتبديل الضوء
+        async function toggleLight() {
+            const isLocked = await checkLockStatus();
+
+            // إذا كان الزر مغلقًا، لا يمكن الضغط
+            if (isLocked) {
+                alert("الزر مغلق الآن! انتظر قليلًا.");
+                return;
+            }
+
+            // قفل الزر وتغيير الخلفية
+            await fetch(url, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Master-Key": "$2a$10$4UPC1E1p.uUVrcZGToTE7uWrjGdGByxuiDZvzoxvCH475dz38UAjq" 
+                },
+                body: JSON.stringify({ locked: true })
+            });
+
+            document.body.style.backgroundColor = 'yellow';
+            setTimeout(async () => {
+                document.body.style.backgroundColor = '#222';
+
+                // إعادة فتح الزر بعد 3 ثوانٍ
+                await fetch(url, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Master-Key": "$2a$10$4UPC1E1p.uUVrcZGToTE7uWrjGdGByxuiDZvzoxvCH475dz38UAjq" 
+                    },
+                    body: JSON.stringify({ locked: false })
+                });
+
+            }, 3000); 
+        }
+    </script>
+
+</body>
+</html>
